@@ -3,6 +3,7 @@
 #include "TList.h"
 #include "TChain.h"
 #include "TError.h"
+#include "TFile.h"
 
 #include"db_interface.cxx"
 
@@ -17,6 +18,7 @@ int main(int argc, char** argv)
   //gErrorIgnoreLevel = kError;
   gProofDebugMask = TProofDebug::kAll;
   gProofDebugLevel = 5;
+  gProofDebugLevel = 1;
   std::cout << "--==DQM Main==--" << endl;
   if (argc<2)
     {
@@ -51,8 +53,8 @@ int main(int argc, char** argv)
   TChain *ch = new TChain ("GEMtree","chain");
   ch->Add(ifilename.c_str());
 
-
-  TProof::Open("workers=4");
+  ofilename = "BRSTest.root";
+  TProof::Open("workers=4",0);
   gProof->AddInput(new TNamed("PROOF_OUTPUTFILE", ofilename.c_str()));
   gProof->GetInputList()->Print();
   ch->SetProof();;
@@ -73,9 +75,36 @@ int main(int argc, char** argv)
   gProof->AddIncludePath(path.c_str());
 
   gSystem->SetIncludePath("-I$BUILD_HOME/gem-light-dqm/dqm-root/include -I$BUILD_HOME/gem-light-dqm/dqm-root/src/common -I$BUILD_HOME/gem-light-dqm/gemtreewriter/include");
-
-  sel += "/gem-light-dqm/dqm-root/src/common/gemTreeReader.cxx++g";
+//  std::cout << "##Running gemTreeReader##" << endl;
+//  sel += "/gem-light-dqm/dqm-root/src/common/gemTreeReader.cxx++g";
+//  ch->Process(sel.c_str());
+//  std::cout << "##Finished gemTreeReader##" << endl;
+//  gSystem->SysLog(Error);
+  std::cout << "##Running gemTreeTranslator##" << endl;
+  sel += "/gem-light-dqm/dqm-root/src/common/gemTreeTranslator.cxx++g";
   ch->Process(sel.c_str());
+  std::cout << "##Finished gemTreeTranslator##" << endl;
+
+  //===================================================
+  //    SPLIT OUTPUT INTO MANY TFILES BASED ON NUMBER OF TTREES
+  //
+  //===================================================
+    TFile *inputfile = new TFile(ofilename.c_str(),"READ");
+    for (auto keys : *inputfile->GetListOfKeys()) {
+        //cout << keys->GetName() << endl;
+        TFile *temp_file = new TFile(TString(keys->GetName())+".root","RECREATE");
+        TTree *temp_tree = (TTree*)inputfile->Get(keys->GetName());
+        temp_file->cd();
+        temp_tree->CloneTree()->Write();
+        temp_file->Close();
+        delete temp_tree;
+        temp_tree = 0;
+        delete temp_file;
+    }
+    inputfile->Close();
+  //===================================================
+
+
   //TProofLite::Mgr("__lite__")->GetSessionLogs()->Display("*");
 
   if (DEBUG) std::cout << "DQM Complete." << endl;
