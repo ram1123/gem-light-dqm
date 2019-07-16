@@ -60,11 +60,31 @@ class gemTreeTranslator: public TSelector {
         int amcID;
         int amcBID;
         int gebID;
-        int vfatID;
         int infoAMCVEC;
         int infoGEBVEC;
         int infoVFATVEC;
-        int Nev;
+        int calPhase;
+        int Dly;
+        int l1aTime;
+        int latency;
+        int link;
+        int pDel;
+        int mode;
+        int mspl;
+        int Nev; 
+        int Nhits; 
+        int trimDAC; 
+        int utime; 
+        int vcal; 
+        int vfatCH; 
+        int vfatID; 
+        int vfatN; 
+        int vth; 
+        int vth1; 
+        int vth2; 
+        float ztrim;
+        int shelf;
+        int slot;
 
         //int VFATMap[12][12][24];
 
@@ -128,28 +148,6 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
     int numOfAMC=3;
     int numOfGEB=5;
     int numOfVFAT=24;
-    int calPhase;
-    int Dly;
-    int l1aTime;
-    int latency;
-    int link;
-    int pDel;
-    int mode;
-    int mspl;
-    int Nev; 
-    int Nhits; 
-    int trimDAC; 
-    int utime; 
-    int vcal; 
-    int vfatCH; 
-    int vfatID; 
-    int vfatN; 
-    int vth; 
-    int vth1; 
-    int vth2; 
-    float ztrim;
-    int shelf;
-    int slot;
 
     tree_list.clear(); // clear the vector having list of trees
     for (auto amc_count=0; amc_count<numOfAMC; ++amc_count){
@@ -185,7 +183,6 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
 
                 auto branchAMCID  = treeTranslator->Branch("amcID",&amcID,"AMC ID/I"); //amcID
                 auto branchGEBID  = treeTranslator->Branch("gebID",&gebID,"GEB ID/I");
-                auto branchVfatID = treeTranslator->Branch("vfatID",&vfatID,"VFAT ID/I"); //vfatID
                 tree_list.push_back(treeTranslator);
             }
         }
