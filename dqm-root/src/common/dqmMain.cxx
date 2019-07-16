@@ -82,7 +82,8 @@ int main(int argc, char** argv)
 //  gSystem->SysLog(Error);
   std::cout << "##Running gemTreeTranslator##" << endl;
   sel += "/gem-light-dqm/dqm-root/src/common/gemTreeTranslator.cxx++g";
-  ch->Process(sel.c_str());
+  //ch->Process(sel.c_str());   
+  ch->Process(sel.c_str(),"",10000);   
   std::cout << "##Finished gemTreeTranslator##" << endl;
 
   //===================================================

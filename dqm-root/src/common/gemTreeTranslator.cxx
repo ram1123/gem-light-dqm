@@ -128,6 +128,28 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
     int numOfAMC=3;
     int numOfGEB=5;
     int numOfVFAT=24;
+    int calPhase;
+    int Dly;
+    int l1aTime;
+    int latency;
+    int link;
+    int pDel;
+    int mode;
+    int mspl;
+    int Nev; 
+    int Nhits; 
+    int trimDAC; 
+    int utime; 
+    int vcal; 
+    int vfatCH; 
+    int vfatID; 
+    int vfatN; 
+    int vth; 
+    int vth1; 
+    int vth2; 
+    float ztrim;
+    int shelf;
+    int slot;
 
     tree_list.clear(); // clear the vector having list of trees
     for (auto amc_count=0; amc_count<numOfAMC; ++amc_count){
@@ -136,10 +158,34 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
                 TString treeName="gemTree_"+std::to_string(amc_count)+"_"+std::to_string(geb_count)+"_"+std::to_string(vfat_count);
                 new TProofOutputFile(treeName, "M");
                 treeTranslator    = new TTree(treeName,"Tree holding gem info");
+                auto branchcalPhase  = treeTranslator->Branch("calPhase",&calPhase,"calPhase/I"); //amcID
+                auto branchDly  = treeTranslator->Branch("Dly",&Dly,"Dly/I"); //amcID
+                auto branchl1aTime  = treeTranslator->Branch("l1aTime",&l1aTime,"l1aTime/I"); //amcID
+                auto branchlatency  = treeTranslator->Branch("latency",&latency,"latency/I"); //amcID
+                auto branchlink  = treeTranslator->Branch("link",&link,"link/I"); //amcID
+                auto branchpDel  = treeTranslator->Branch("pDel",&pDel,"pDel/I"); //amcID
+                auto branchmode  = treeTranslator->Branch("mode",&mode,"mode/I"); //amcID
+                auto branchmspl  = treeTranslator->Branch("mspl",&mspl,"mspl/I"); //amcID
+                auto branchNev  = treeTranslator->Branch("Nev",&Nev,"Nev/I"); //amcID
+                auto branchNhits  = treeTranslator->Branch("Nhits",&Nhits,"Nhits/I"); //amcID
+                auto branchtrimDAC  = treeTranslator->Branch("trimDAC",&trimDAC,"trimDAC/I"); //amcID
+                auto branchutime  = treeTranslator->Branch("utime",&utime,"utime/I"); //amcID
+                auto branchvcal  = treeTranslator->Branch("vcal",&vcal,"vcal/I"); //amcID
+                auto branchvfatCH  = treeTranslator->Branch("vfatCH",&vfatCH,"vfatCH/I"); //amcID
+                auto branchvfatID  = treeTranslator->Branch("vfatID",&vfatID,"vfatID/I"); //amcID
+                auto branchvfatN  = treeTranslator->Branch("vfatN",&vfatN,"vfatN/I"); //amcID
+                auto branchvth  = treeTranslator->Branch("vth",&vth,"vth/I"); //amcID
+                auto branchvth1  = treeTranslator->Branch("vth1",&vth1,"vth1/I"); //amcID
+                auto branchvth2  = treeTranslator->Branch("vth2",&vth2,"vth2/I"); //amcID
+                auto branchztrim  = treeTranslator->Branch("ztrim",&ztrim,"ztrim/F"); //amcID
+
+
+                auto branchshelf  = treeTranslator->Branch("shelf",&shelf,"shelf/I"); //amcID
+                auto branchslot  = treeTranslator->Branch("slot",&slot,"slot/I"); //amcID
+
                 auto branchAMCID  = treeTranslator->Branch("amcID",&amcID,"AMC ID/I"); //amcID
                 auto branchGEBID  = treeTranslator->Branch("gebID",&gebID,"GEB ID/I");
                 auto branchVfatID = treeTranslator->Branch("vfatID",&vfatID,"VFAT ID/I"); //vfatID
-                auto branchNev    = treeTranslator->Branch("Nev",&Nev,"Nev/I"); //Nev
                 tree_list.push_back(treeTranslator);
             }
         }
