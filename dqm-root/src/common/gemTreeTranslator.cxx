@@ -16,9 +16,23 @@
 #include <sstream>
 #include <vector>
 #include <TSystem.h>
+#include <bitset>
 
 #include "AMC13_histogram.cxx"
 
+
+
+unsigned int countBits(uint64_t n)
+{
+    unsigned int count = 0;
+        while (n)
+        {
+            count += n & 1;
+            n >>= 1;
+        }
+
+return count;
+}
 class gemTreeTranslator: public TSelector {
     public :
         TTree          *fChain;   //!pointer to the analyzed TTree or TChain
@@ -60,31 +74,17 @@ class gemTreeTranslator: public TSelector {
         int amcID;
         int amcBID;
         int gebID;
+        int vfatID;
         int infoAMCVEC;
         int infoGEBVEC;
         int infoVFATVEC;
-        int calPhase;
-        int Dly;
-        int l1aTime;
-        int latency;
-        int link;
-        int pDel;
-        int mode;
-        int mspl;
-        int Nev; 
-        int Nhits; 
-        int trimDAC; 
-        int utime; 
-        int vcal; 
-        int vfatCH; 
-        int vfatID; 
-        int vfatN; 
-        int vth; 
-        int vth1; 
-        int vth2; 
-        float ztrim;
-        int shelf;
-        int slot;
+        int Nev;
+        int vfatN;
+        int Nhits;
+        int vth1;
+        int vth2;
+
+
 
         //int VFATMap[12][12][24];
 
@@ -148,6 +148,28 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
     int numOfAMC=3;
     int numOfGEB=5;
     int numOfVFAT=24;
+    int calPhase;
+    int Dly;
+    int l1aTime;
+    int latency;
+    int link;
+    int pDel;
+    int mode;
+    int mspl;
+    int Nev;
+    int Nhits;
+    int trimDAC;
+    int utime;
+    int vcal;
+    int vfatCH;
+    int vfatID;
+    int vfatN;
+    int vth;
+    int vth1;
+    int vth2;
+    float ztrim;
+    int shelf;
+    int slot;
 
     tree_list.clear(); // clear the vector having list of trees
     for (auto amc_count=0; amc_count<numOfAMC; ++amc_count){
@@ -239,6 +261,8 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
             if (m_RunType) {
                 m_Latency = a->Param1(); //BRS: NO IDEA
             }
+
+
             geb_count=0;
             /* LOOP THROUGH GEBs */
             for(auto g=v_geb.begin(); g!=v_geb.end();g++) {
@@ -256,13 +280,28 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
                     //          if (slot>-1) {v_vfatH = v_gebH->vfatsH(slot);} else { continue;} //BRS what is this?
                     //BRS: Fill branches here...
                     //            amcID=amc_count;
-                    amcID=a->AMCnum();
-                    gebID=g->InputID();
-                    vfatID=slot;
+                    amcID = a->AMCnum();
+                    gebID = g->InputID();
+                    uint64_t binChannel_0_63 = v->lsData();
+                    uint64_t binChannel_64_127 = v->msData();
+                    //vfatID = v->ChipID();
+                    Nev  = v->EC();
+                    Nhits = countBits(binChannel_0_63) + countBits(binChannel_64_127);
+                    vfatN = slot;
+                    m_Latency = a->Param1(); //BRS: NO IDEA
+                    vth1 = a->Param2();
+                    vth2= a->Param3();
+
                     std::cout << "\n\n==========================\n\n" << std::endl;
+                    std::cout << "channnels 0-63 = " << countBits(binChannel_0_63) << std::endl;
+                    std::cout << "channnels 64-127 = " << countBits(binChannel_64_127) << std::endl;
                     std::cout << "amcID = " << amcID << std::endl;
+                    std::cout << "m_Latency = " << m_Latency << std::endl;
+                    std::cout << "vth1 = " << vth1 << std::endl;
+                    std::cout << "vth2 = " << vth2 << std::endl;
                     std::cout << "gebID = " << gebID << std::endl;
-                    std::cout << "vfatID = " << vfatID << std::endl;
+                    std::cout << "Number of events = " << Nev << std::endl;
+                    std::cout << "vfatN = " << vfatN << std::endl;
                     std::cout << "\n\n==========================\n\n" << std::endl;
                     //            vfatN=slot;
                     //            vfatID=v.
