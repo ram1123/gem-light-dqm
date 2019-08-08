@@ -168,8 +168,8 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
     tree_list.clear(); // clear the vector having list of trees
     for (auto amc_count=0; amc_count<numOfAMC; ++amc_count){
         for (auto geb_count=0; geb_count<numOfGEB; ++geb_count){
-            for (auto vfat_count=0; vfat_count<numOfVFAT; ++vfat_count){
-                TString treeName="gemTree_"+std::to_string(amc_count)+"_"+std::to_string(geb_count)+"_"+std::to_string(vfat_count);
+            //for (auto vfat_count=0; vfat_count<numOfVFAT; ++vfat_count){
+                TString treeName="gemTree_"+std::to_string(amc_count)+"_"+std::to_string(geb_count);
                 new TProofOutputFile(treeName, "M");
                 treeTranslator    = new TTree(treeName,"Tree holding gem info");
                 auto branchcalPhase  = treeTranslator->Branch("calPhase",&calPhase,"calPhase/I"); //amcID
@@ -200,9 +200,9 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
                 //auto branchAMCID  = treeTranslator->Branch("amcID",&amcID,"AMC ID/I"); //amcID
                 //auto branchGEBID  = treeTranslator->Branch("gebID",&gebID,"GEB ID/I");
                 tree_list.push_back(treeTranslator);
-            }
-        }
-    }
+            //}  // End of VFAT loop
+        } // End of GEB loop
+    }  // End of AMC loop
 
     //fFile->Add(treeTranslator);
     for (auto obj : tree_list) {
@@ -212,7 +212,7 @@ void gemTreeTranslator::SlaveBegin(TTree * /*tree*/)
     if (fChain){
         fChain->GetEntry(0);
         v_amc13 = GEMEvents->amc13s();
-        std::cout << "SlaveBegin: v_amc13 = "<< v_amc13.size() << std::endl;
+        if (DEBUG) std::cout << "SlaveBegin: v_amc13 = "<< v_amc13.size() << std::endl;
     }
     else{
         Error("Begin", "no fChain!");
@@ -229,6 +229,9 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
 {
     //fReader.SetEntry(entry);
     fChain->GetEntry(entry);
+    if (DEBUG) std::cout<<"########################################"<<std::endl;
+    if (DEBUG) std::cout<<"\n\tEvent loop\n"<<std::endl;
+    if (DEBUG) std::cout<<"########################################"<<std::endl;
     int amc13_count=0;    //counter through AMC13s
     int amc_count=0;      //counter through AMCs
     int geb_count=0;      //counter through GEBs
@@ -253,17 +256,18 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
     /* END local variable*/
 
     v_amc13 = GEMEvents->amc13s();
-    if (DEBUG) cout << "Get a vector of AMC13 "<< endl;
+    if (DEBUG) cout << "Get a vector of AMC13 having size " << v_amc13.size() << endl;
     /* LOOP THROUGH AMC13s */
     for(auto amc13 = v_amc13.begin(); amc13!=v_amc13.end(); amc13++) {
-        if (DEBUG) cout << "Get AMC13 "<< endl;
         v_amc = amc13->amcs();
+        if (DEBUG) cout << "Found AMC having size " << v_amc.size() << endl;
         //vector<unsigned short> test = amc13->BoardID();
-        //cout << "BoardID = "<< (amc13->BoardID()).size() << endl;
+        //if (DEBUG) cout << "BoardID = "<< (amc13->BoardID()).size() << endl;
         //local_shelf = amc13->BoardID();
         /* LOOP THROUGH AMCs */
         for(auto amc=v_amc.begin(); amc!=v_amc.end(); amc++){
-            if (DEBUG) cout << "Get AMC "<< endl;
+            v_geb = amc->gebs();
+            if (DEBUG) cout << "Found GEB having size "<< v_geb.size() << endl;
             local_slot =amc->AMCnum();
             local_l1aTime = amc->L1AT();
             int m_RunType = amc->Rtype();
@@ -274,13 +278,25 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
             }
 
             geb_count=0;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_slot = "<<local_slot<<std::endl;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_l1aTime = "<<local_l1aTime<<std::endl;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_m_RunType= "<<m_RunType<<std::endl;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_latency = "<<local_latency<<std::endl;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_vth = "<<local_vth<<std::endl;
+            //if (DEBUG) std::cout<<"amc:"<< amc_count << ": local_vth1 = "<<local_vth1<<std::endl;
+            //if (DEBUG) std::cout<<"amc:  = "<<<<std::endl;
             /* LOOP THROUGH GEBs */
             for(auto g=v_geb.begin(); g!=v_geb.end();g++) {
+                v_vfat = g->vfats();
                 local_link = g->InputID();
                 /* LOOP THROUGH VFATs */
                 vfat_count = 0;
+                if (DEBUG) std::cout<<"-----"<<endl;
+                if (DEBUG) std::cout<<"GEB:" << geb_count << ": local_link = "<<local_link<<std::endl;
+                if (DEBUG) std::cout << "Found VFATs having size "<< v_vfat.size() << std::endl;
                 for(auto v=v_vfat.begin(); v!=v_vfat.end();v++) {
-                    TString treeName="gemTree_"+std::to_string(amc_count)+"_"+std::to_string(geb_count)+"_"+std::to_string(vfat_count);
+                    //if (DEBUG) std::cout << "Found VFATs " << std::endl;
+                    TString treeName="gemTree_"+std::to_string(amc_count)+"_"+std::to_string(geb_count);
                     local_amcID = amc->AMCnum();
                     local_calPhase = v->isBlockGood();
                     //local_vfatID = v->chipID();
@@ -289,12 +305,27 @@ Bool_t gemTreeTranslator::Process(Long64_t entry)
                     uint64_t binChannel_64_127 = v->msData();
                     local_Nev  = v->EC();
                     local_Nhits += countBits(binChannel_0_63) + countBits(binChannel_64_127);
+                    
+                    //if (DEBUG) std::cout<< "\n\n==========================\n\n" << std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": treeName = "<<treeName<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": local_amcID = "<<local_amcID<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": local_calPhase = "<<local_calPhase<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": local_Pos = "<<local_vfatN<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": local_SlotNumber = "<<v->SlotNumber()<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": countBits(binChannel_0_63) = "<<countBits(binChannel_0_63)<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": countBits(binChannel_64_127) = "<<countBits(binChannel_64_127)<<std::endl;
+                    //if (binChannel_0_63 != 0 || binChannel_64_127 != 0) {
+                    if (DEBUG) std::cout<<"VFAT:" << vfat_count << ": local_Pos = "<<local_vfatN<<std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count <<  ": lsData = " << binChannel_0_63 << std::endl;
+                    //if (DEBUG) std::cout<<"VFAT:" << vfat_count <<  ": msData = " << binChannel_64_127 << std::endl;
+                    //}
+                    //if (DEBUG) std::cout<< "\n\n==========================\n\n" << std::endl;
                     //m_Latency = amc->Param1(); //BRS: NO IDEA
 
                     for (auto obj : tree_list) {
                         if (obj->GetName() == treeName) {
                             static_cast<TTree*>(obj)->Fill();
-                            cout << "ram object name : " << obj->GetName() << endl;
+                            //if (DEBUG) cout << "Object name : " << obj->GetName() << endl;
                         }
                     }
                     //
@@ -413,7 +444,7 @@ void gemTreeTranslator::Init(TTree *tree)
 
     fChain->SetBranchAddress("GEMEvents", &GEMEvents, &b_GEMEvents);
     v_amc13 = GEMEvents->amc13s();
-    std::cout << "RK v_amc13 sizee = " << v_amc13.size() << std::endl;
+    if (DEBUG) std::cout << "v_amc13 size = " << v_amc13.size() << std::endl;
 }
 
 Bool_t gemTreeTranslator::Notify()
